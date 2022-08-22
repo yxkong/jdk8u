@@ -39,6 +39,7 @@
 //  length    // shares klass memory or allocated after declared fields.
 
 /**
+ * 数组实例 抽象方法
  * 16字节
  */
 class arrayOopDesc : public oopDesc {

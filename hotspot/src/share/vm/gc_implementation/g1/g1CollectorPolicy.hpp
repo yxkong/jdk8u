@@ -581,6 +581,9 @@ private:
   // initial-mark work.
   volatile bool _during_initial_mark_pause;
 
+  /**
+   * 只有在老年代并发gc的cleanup阶段结束后会设置为true
+   */
   bool _last_young_gc;
 
   // This set of variables tracks the collector efficiency, in order to
@@ -636,7 +639,9 @@ private:
   // Returns the given amount of uncollected reclaimable space
   // as a percentage of the current heap capacity.
   double reclaimable_bytes_perc(size_t reclaimable_bytes);
-
+/**
+ * G1 回收策略
+ */
 public:
 
   G1CollectorPolicy();

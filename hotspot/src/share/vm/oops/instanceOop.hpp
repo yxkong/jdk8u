@@ -29,10 +29,13 @@
 
 // An instanceOop is an instance of a Java Class
 // Evaluating "new HashTable()" will create an instanceOop.
-
+/**
+ * 实例数据
+ */
 class instanceOopDesc : public oopDesc {
  public:
   // aligned header size.
+  //对齐头大小
   static int header_size() { return sizeof(instanceOopDesc)/HeapWordSize; }
 
   // If compressed, the offset of the fields of the instance may not be aligned.

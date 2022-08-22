@@ -769,7 +769,9 @@ HeapWord* GenCollectorPolicy::mem_allocate_work(size_t size,
     }
   }
 }
-
+/**
+ * 扩容策略
+ */
 HeapWord* GenCollectorPolicy::expand_heap_and_allocate(size_t size,
                                                        bool   is_tlab) {
   GenCollectedHeap *gch = GenCollectedHeap::heap();

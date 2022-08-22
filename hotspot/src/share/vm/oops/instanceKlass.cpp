@@ -1145,9 +1145,12 @@ instanceOop InstanceKlass::register_finalizer(instanceOop i, TRAPS) {
   JavaCalls::call(&result, mh, &args, CHECK_NULL);
   return h_i();
 }
-
+/**
+ * 申请实例空间
+ */
 instanceOop InstanceKlass::allocate_instance(TRAPS) {
   bool has_finalizer_flag = has_finalizer(); // Query before possible GC
+  //获取创建实例的大小
   int size = size_helper();  // Query before forming handle.
 
   KlassHandle h_k(THREAD, this);

@@ -285,6 +285,12 @@ void ObjectSynchronizer::slow_exit(oop object, BasicLock* lock, TRAPS) {
 //  4) reenter lock1 with original recursion count
 //  5) lock lock2
 // NOTE: must use heavy weight monitor to handle complete_exit/reenter()
+/**
+ * 完成退出
+ * @param obj
+ * @param __the_thread__
+ * @return
+ */
 intptr_t ObjectSynchronizer::complete_exit(Handle obj, TRAPS) {
   TEVENT (complete_exit) ;
   if (UseBiasedLocking) {
@@ -295,7 +301,7 @@ intptr_t ObjectSynchronizer::complete_exit(Handle obj, TRAPS) {
   ObjectMonitor* monitor = ObjectSynchronizer::inflate(THREAD,
                                                        obj(),
                                                        inflate_cause_vm_internal);
-
+  //调用monitor的完成退出
   return monitor->complete_exit(THREAD);
 }
 

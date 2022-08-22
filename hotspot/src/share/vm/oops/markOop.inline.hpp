@@ -28,8 +28,17 @@
 #include "oops/klass.hpp"
 #include "oops/markOop.hpp"
 #include "runtime/globals.hpp"
-
+/**
+ * mark work 内联方法实现
+ * @param obj_containing_mark
+ * @return
+ */
 // Should this header be preserved during GC (when biased locking is enabled)?
+/**
+ *
+ * @param obj_containing_mark
+ * @return
+ */
 inline bool markOopDesc::must_be_preserved_with_bias(oop obj_containing_mark) const {
   assert(UseBiasedLocking, "unexpected");
   if (has_bias_pattern()) {
@@ -101,7 +110,11 @@ inline bool markOopDesc::must_be_preserved_for_cms_scavenge(Klass* klass_of_obj_
     return (!is_unlocked() || !has_no_hash());
   return must_be_preserved_with_bias_for_cms_scavenge(klass_of_obj_containing_mark);
 }
-
+/**
+ * 获取实例对象 klass 中的属性头
+ * @param obj
+ * @return
+ */
 inline markOop markOopDesc::prototype_for_object(oop obj) {
 #ifdef ASSERT
   markOop prototype_header = obj->klass()->prototype_header();

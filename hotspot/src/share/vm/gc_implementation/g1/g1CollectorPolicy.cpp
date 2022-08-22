@@ -951,7 +951,11 @@ bool G1CollectorPolicy::need_to_start_conc_mark(const char* source, size_t alloc
 
 // Anything below that is considered to be zero
 #define MIN_TIMER_GRANULARITY 0.0000001
-
+/**
+ * youngGC结束后记录暂停结束的方法
+ * @param pause_time_ms
+ * @param evacuation_info
+ */
 void G1CollectorPolicy::record_collection_pause_end(double pause_time_ms, EvacuationInfo& evacuation_info) {
   double end_time_sec = os::elapsedTime();
   assert(_cur_collection_pause_used_regions_at_start >= cset_region_length(),
@@ -1037,7 +1041,7 @@ void G1CollectorPolicy::record_collection_pause_end(double pause_time_ms, Evacua
         assert(_recent_avg_pause_time_ratio - 1.0 > 0.0, "Ctl-point invariant");
         _recent_avg_pause_time_ratio = 1.0;
       }
-    }
+    }mo
   }
 
   bool new_in_marking_window = _in_marking_window;

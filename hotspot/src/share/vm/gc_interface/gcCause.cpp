@@ -24,9 +24,14 @@
 
 #include "precompiled.hpp"
 #include "gc_interface/gcCause.hpp"
-
+/**
+ * GC原因枚举，转成String
+ * @param cause
+ * @return
+ */
 const char* GCCause::to_string(GCCause::Cause cause) {
   switch (cause) {
+      //程序主动触发的
     case _java_lang_system_gc:
       return "System.gc()";
 
@@ -63,7 +68,10 @@ const char* GCCause::to_string(GCCause::Cause cause) {
 
     case _no_gc:
       return "No GC";
-
+    /**
+     * 申请空间失败，引发的GC
+     * 例如：启动的时候，xms和xmx设置不一样
+     */
     case _allocation_failure:
       return "Allocation Failure";
 
@@ -75,10 +83,10 @@ const char* GCCause::to_string(GCCause::Cause cause) {
 
     case _cms_generation_full:
       return "CMS Generation Full";
-
+    //CMS 初始化标记
     case _cms_initial_mark:
       return "CMS Initial Mark";
-
+    //CMS
     case _cms_final_remark:
       return "CMS Final Remark";
 
@@ -96,7 +104,7 @@ const char* GCCause::to_string(GCCause::Cause cause) {
 
     case _g1_inc_collection_pause:
       return "G1 Evacuation Pause";
-
+    // G1大对象申请引发的GC
     case _g1_humongous_allocation:
       return "G1 Humongous Allocation";
 

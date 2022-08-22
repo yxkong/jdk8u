@@ -100,14 +100,35 @@
 class BasicLock;
 class ObjectMonitor;
 class JavaThread;
-
+/**
+ * 对象头信息
+ */
 class markOopDesc: public oopDesc {
  private:
   // Conversion
+  /**
+   * 对象头里的数据 value
+   *  uintptr_t 能够存储指针的无符号整数类型，与指针的大小相同
+   *  32位虚拟机中 是4直接  32位
+   *  64位虚拟机中 是8直接  64位
+   * @return
+   */
   uintptr_t value() const { return (uintptr_t) this; }
 
  public:
   // Constants
+  /**
+   * 各种类型在Mark workd中占用的字节数
+   *  age_bits 分代年龄 占4 位
+   *  lock_bits 锁标识 占2位
+   *  biased_lock_bits 偏向锁标识 占1位
+   *  max_hash_bits 最大hash位
+   *    64位虚拟机 BitsPerWord 为64
+   *    32位虚拟机 BitsPerWord 为32位
+   *  hash_bits hashCode 占的位数（最多占31位） 64位虚拟机的时候，占31位
+   *  cms_bits 最多占用1位  64位虚拟机的占用1，32位虚拟机占用0
+   *  epoch_bits 占用2字节
+   */
   enum { age_bits                 = 4,
          lock_bits                = 2,
          biased_lock_bits         = 1,
@@ -119,6 +140,13 @@ class markOopDesc: public oopDesc {
 
   // The biased locking code currently requires that the age bits be
   // contiguous to the lock bits.
+  /**
+   * 这块可以理解为各个状态偏移量，相对最右侧的位置
+   *   可以理解为倒排序，对应的索引位
+   * lock_shift 锁从右0位（因为锁标识在最后一位）
+   * biased_lock_shift 偏向锁的位置为 锁标识占用的位数
+   * age_shift 分代年龄为 锁标识+偏向锁占用的位置
+   */
   enum { lock_shift               = 0,
          biased_lock_shift        = lock_bits,
          age_shift                = lock_bits + biased_lock_bits,
@@ -126,13 +154,23 @@ class markOopDesc: public oopDesc {
          hash_shift               = cms_shift + cms_bits,
          epoch_shift              = hash_shift
   };
-
+/**
+ * 存储的最大值
+ * 以及对应到value 中如何呈现
+ * 比如：32位虚拟机是mark word 大小
+ * 0000 0000 0000 0000 0000 0000 0000 0000
+ * 存储分代年龄应该是26~29位
+ *  通过right_n_bits(age_bits) 计算出来 为15
+ *  age_mask_in_place 就是 0000 0000 0000 0000 0000 0000 0111 1000
+ */
   enum { lock_mask                = right_n_bits(lock_bits),
          lock_mask_in_place       = lock_mask << lock_shift,
          biased_lock_mask         = right_n_bits(lock_bits + biased_lock_bits),
          biased_lock_mask_in_place= biased_lock_mask << lock_shift,
          biased_lock_bit_in_place = 1 << biased_lock_shift,
+         //存储分代年龄的最大值
          age_mask                 = right_n_bits(age_bits),
+         //分代年龄最大值在value中的呈现
          age_mask_in_place        = age_mask << age_shift,
          epoch_mask               = right_n_bits(epoch_bits),
          epoch_mask_in_place      = epoch_mask << epoch_shift,
@@ -260,9 +298,18 @@ class markOopDesc: public oopDesc {
   // WARNING: The following routines are used EXCLUSIVELY by
   // synchronization functions. They are not really gc safe.
   // They must get updated if markOop layout get changed.
+  /**
+   * 解锁   |运算 只要有一个为1就为1
+   * @return
+   */
   markOop set_unlocked() const {
     return markOop(value() | unlocked_value);
   }
+  /**
+   * 是否有锁
+   *    通过& 运算（两个相同即为1） 然后和locked的相等判断
+   * @return
+   */
   bool has_locker() const {
     return ((value() & lock_mask_in_place) == locked_value);
   }
@@ -270,9 +317,18 @@ class markOopDesc: public oopDesc {
     assert(has_locker(), "check");
     return (BasicLock*) value();
   }
+  /**
+   * 是否有monitor
+   * @return
+   */
   bool has_monitor() const {
     return ((value() & monitor_value) != 0);
   }
+  /**
+   * 获取monitor对象
+   *   通过异或 原酸，相同结果为0，否则结果为1
+   * @return
+   */
   ObjectMonitor* monitor() const {
     assert(has_monitor(), "check");
     // Use xor instead of &~ to provide one extra tag-bit check.
@@ -326,10 +382,16 @@ class markOopDesc: public oopDesc {
   markOop set_unmarked() { return markOop((value() & ~lock_mask_in_place) | unlocked_value); }
 
   uint    age()               const { return mask_bits(value() >> age_shift, age_mask); }
+  //设置分代年龄
   markOop set_age(uint v) const {
     assert((v & ~age_mask) == 0, "shouldn't overflow age field");
     return markOop((value() & ~age_mask_in_place) | (((uintptr_t)v & age_mask) << age_shift));
   }
+  /**
+   *  增长分代年龄
+   *  增长到存储的最大了，就不在 增长了，
+   *  4位，最多存储到15
+   */
   markOop incr_age()          const { return age() == max_age ? markOop(this) : set_age(age() + 1); }
 
   // hash operations
@@ -372,7 +434,7 @@ class markOopDesc: public oopDesc {
                                      NOT_LP64(0);
   const static uintptr_t size_mask_in_place =
                                      (address_word)size_mask << size_shift;
-
+ //64位虚拟机对应的操作
 #ifdef _LP64
   static markOop cms_free_prototype() {
     return markOop(((intptr_t)prototype() & ~cms_mask_in_place) |

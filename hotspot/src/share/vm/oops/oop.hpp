@@ -55,12 +55,32 @@ class CMSIsAliveClosure;
 
 class PSPromotionManager;
 class ParCompactionManager;
-
+/**
+ * java对象的表示，
+ * 一个java对象在HotSpot VM内部都会创建一个oop实例
+ *  - markOopDesc 表示对象头
+ *  - instanceOopDesc 普通实例
+ *  - arrayOopDesc 数组实例
+ *
+ * 在HotSpot中一般使用oop表示oopDesc 类型
+ * 好多方法在oop.inline.hpp 文件中通过内联实现
+ */
 class oopDesc {
   friend class VMStructs;
+  /**
+   * 对象头由_mark 和_metadata 组成
+   * _mark 保存了java对象的一些信息，GC分代年龄，锁状态等，8字节
+   * _metadata 使用联合体声明，是为了在64位虚拟机中进行压缩，在64位上是8字节，压缩后为4字节
+   *    只有在4GB~32GB之间启用压缩指针
+   *
+   * 堆内的对象使用：-XX:+UseCompressedOops
+   * 元空间使用的：-XX:+UseCompressedClassPointer
+   *
+   */
  private:
   volatile markOop  _mark;
   union _metadata {
+      //指向的是对象的类的Klass实例
     Klass*      _klass;
     narrowKlass _compressed_klass;
   } _metadata;

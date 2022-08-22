@@ -39,7 +39,10 @@ BiasedLockingCounters BiasedLocking::_counters;
 
 static GrowableArray<Handle>*  _preserved_oop_stack  = NULL;
 static GrowableArray<markOop>* _preserved_mark_stack = NULL;
-
+/**
+ *偏向锁启用
+ * @param k
+ */
 static void enable_biased_locking(Klass* k) {
   k->set_prototype_header(markOopDesc::biased_locking_prototype());
 }

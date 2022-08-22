@@ -179,6 +179,7 @@ class MetaWord {
 };
 
 // HeapWordSize must be 2^LogHeapWordSize.
+//字节大小，64位为8
 const int HeapWordSize        = sizeof(HeapWord);
 #ifdef _LP64
 const int LogHeapWordSize     = 3;

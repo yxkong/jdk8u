@@ -959,6 +959,11 @@ void ObjectMonitor::UnlinkAfterAcquire (Thread * Self, ObjectWaiter * SelfNode)
 // Both impinge on OS scalability.  Given that, at most one thread parked on
 // a monitor will use a timer.
 
+/**
+ * 当前线程退出
+ * @param not_suspended
+ * @param __the_thread__
+ */
 void ATTR ObjectMonitor::exit(bool not_suspended, TRAPS) {
    Thread * Self = THREAD ;
    if (THREAD != _owner) {
@@ -1374,13 +1379,18 @@ void ObjectMonitor::ExitEpilog (Thread * Self, ObjectWaiter * Wakee) {
 // The _owner field is not always the Thread addr even with an
 // inflated monitor, e.g. the monitor can be inflated by a non-owning
 // thread due to contention.
+/**
+ * 完成退出
+ * @param __the_thread__
+ * @return
+ */
 intptr_t ObjectMonitor::complete_exit(TRAPS) {
    Thread * const Self = THREAD;
    assert(Self->is_Java_thread(), "Must be Java thread!");
    JavaThread *jt = (JavaThread *)THREAD;
 
    DeferredInitialize();
-
+   //线程不是持有者线程
    if (THREAD != _owner) {
     if (THREAD->is_lock_owned ((address)_owner)) {
        assert(_recursions == 0, "internal state error");
@@ -2311,7 +2321,10 @@ int ObjectMonitor::NotRunnable (Thread * Self, Thread * ox) {
 
 // -----------------------------------------------------------------------------
 // WaitSet management ...
-
+/**
+ * 将一个线程封装成ObjectWaiter
+ * @param thread
+ */
 ObjectWaiter::ObjectWaiter(Thread* thread) {
   _next     = NULL;
   _prev     = NULL;
@@ -2333,12 +2346,18 @@ void ObjectWaiter::wait_reenter_end(ObjectMonitor *mon) {
   JavaThread *jt = (JavaThread *)this->_thread;
   JavaThreadBlockedOnMonitorEnterState::wait_reenter_end(jt, _active);
 }
-
+/**
+ * 将当前线程封装成一个ObjectWaiter
+ * @param node
+ */
 inline void ObjectMonitor::AddWaiter(ObjectWaiter* node) {
   assert(node != NULL, "should not dequeue NULL node");
   assert(node->_prev == NULL, "node already in list");
   assert(node->_next == NULL, "node already in list");
   // put node at end of queue (circular doubly linked list)
+  /**
+   * 将当前线程放入等待队列
+   */
   if (_WaitSet == NULL) {
     _WaitSet = node;
     node->_prev = node;
@@ -2480,7 +2499,9 @@ static int kvGetInt (char * kvList, const char * Key, int Default) {
     }
     return rslt ;
 }
-
+/**
+ * 延迟初始化
+ */
 void ObjectMonitor::DeferredInitialize () {
   if (InitDone > 0) return ;
   if (Atomic::cmpxchg (-1, &InitDone, 0) != 0) {

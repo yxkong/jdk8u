@@ -34,13 +34,20 @@
 // ParkEvent instead.  Beware, however, that the JVMTI code
 // knows about ObjectWaiters, so we'll have to reconcile that code.
 // See next_waiter(), first_waiter(), etc.
-
+/**
+ * 对象等待者
+ * 一个线程尝试获取monitor锁失败后，会被封装成一个ObjectWaiter对象
+ * 是一个双向链表
+ */
 class ObjectWaiter : public StackObj {
- public:
+ public://线程状态枚举
   enum TStates { TS_UNDEF, TS_READY, TS_RUN, TS_WAIT, TS_ENTER, TS_CXQ } ;
   enum Sorted  { PREPEND, APPEND, SORTED } ;
+  //链表的next指针
   ObjectWaiter * volatile _next;
+  //链表的prev指针
   ObjectWaiter * volatile _prev;
+  //线程对象
   Thread*       _thread;
   jlong         _notifier_tid;
   ParkEvent *   _event;
@@ -49,6 +56,7 @@ class ObjectWaiter : public StackObj {
   Sorted        _Sorted ;           // List placement disposition
   bool          _active ;           // Contention monitoring is enabled
  public:
+    //将线程封装成ObjectWaiter
   ObjectWaiter(Thread* thread);
 
   void wait_reenter_begin(ObjectMonitor *mon);
@@ -70,9 +78,12 @@ class ObjectWaiter : public StackObj {
 
 // It is also used as RawMonitor by the JVMTI
 
-
+/**
+ * monitor对象，每一个对象又有一个
+ */
 class ObjectMonitor {
  public:
+    //异常枚举
   enum {
     OM_OK,                    // no error
     OM_SYSTEM_ERROR,          // operating system error
@@ -134,23 +145,34 @@ class ObjectMonitor {
 
   // initialize the monitor, exception the semaphore, all other fields
   // are simple integers or pointers
+  /**
+   * 初始化一个monitor
+   */
   ObjectMonitor() {
+      //对象头
     _header       = NULL;
     _count        = 0;
+    //线程等待数量
     _waiters      = 0,
+    //重入的次数
     _recursions   = 0;
+    //监视器锁寄生的对象。锁不是平白出现的，而是寄托存储于对象中
     _object       = NULL;
+    //指向获得ObjectMonitor对象的线程或基础锁
     _owner        = NULL;
+    //处于wait状态的线程，会被加入到wait set；
     _WaitSet      = NULL;
     _WaitSetLock  = 0 ;
     _Responsible  = NULL ;
     _succ         = NULL ;
     _cxq          = NULL ;
     FreeNext      = NULL ;
+    //处于等待锁block状态的线程，会被加入到entry set
     _EntryList    = NULL ;
     _SpinFreq     = 0 ;
     _SpinClock    = 0 ;
     OwnerIsThread = 0 ;
+    // 监视器前一个拥有者线程的ID
     _previous_owner_tid = 0;
   }
 
@@ -240,15 +262,20 @@ public:
   // read from other threads.
 
  protected:                         // protected for jvmtiRawMonitor
+    //指向有用线程或者BasicLock的指针
   void *  volatile _owner;          // pointer to owning thread OR BasicLock
+  //monitor上一个拥有者的线程id
   volatile jlong _previous_owner_tid; // thread id of the previous owner of the monitor
+  //递归/嵌套的数量，作用域可重入锁
   volatile intptr_t  _recursions;   // recursion count, 0 for first entry
  private:
+    //标识_owner是一个thread还是一个BasicLock
   int OwnerIsThread ;               // _owner is (Thread *) vs SP/BasicLock
   ObjectWaiter * volatile _cxq ;    // LL of recently-arrived threads blocked on entry.
                                     // The list is actually composed of WaitNodes, acting
                                     // as proxies for Threads.
  protected:
+    //线程阻塞的的等待队列，配合Synchronized使用
   ObjectWaiter * volatile _EntryList ;     // Threads blocked on entry or reentry.
  private:
   Thread * volatile _succ ;          // Heir presumptive thread - used for futile wakeup throttling

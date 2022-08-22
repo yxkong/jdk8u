@@ -65,7 +65,9 @@
 #include "services/runtimeService.hpp"
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
-
+/**
+ * CMS 回收策略
+ */
 // statics
 CMSCollector* ConcurrentMarkSweepGeneration::_collector = NULL;
 bool CMSCollector::_full_gc_requested = false;
@@ -919,12 +921,17 @@ void ConcurrentMarkSweepGeneration::reset_after_compaction() {
 void ConcurrentMarkSweepGeneration::space_iterate(SpaceClosure* blk, bool usedOnly) {
   blk->do_space(_cmsSpace);
 }
-
+/**
+ * 因为xms和xmx设置的不一样，引发的
+ */
 void ConcurrentMarkSweepGeneration::compute_new_size() {
   assert_locked_or_safepoint(Heap_lock);
 
   // If incremental collection failed, we just want to expand
   // to the limit.
+  /**
+   * 增量收集失败，往xmx上扩展
+   */
   if (incremental_collection_failed()) {
     clear_incremental_collection_failed();
     grow_to_reserved();

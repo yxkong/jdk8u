@@ -33,9 +33,12 @@
 // use of this class grows, we should split it into public
 // and implemenation-private "causes".
 //
-
+/**
+ * GC原因
+ */
 class GCCause : public AllStatic {
  public:
+    //原因枚举
   enum Cause {
     /* public */
     _java_lang_system_gc,
